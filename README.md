@@ -154,6 +154,20 @@ SetWindowPos(...) -> False, GetLastError() = 5 (ERROR_ACCESS_DENIED)
 使用本工具产生的任何后果由使用者自行承担。
 仓库内不包含任何游戏客户端文件、图标或美术资源。
 
-## 9. License
+## 9. 更新日志
+
+- **v1.1.0**
+  - 修复：多开 5~6 个时窗口位置/大小被打乱、变小
+    - 根因一：`Launch.exe` 是 `requireAdministrator`，提权实例无法被普通权限程序排版（UIPI 拒绝），
+      默认改为直连 `bin\onmyoji.exe`
+    - 根因二：客户端会自行修正窗口尺寸，排版改为「先设目标格子，再按实际尺寸行式打包」
+    - 新增：排版超出屏幕时按比例缩小目标尺寸重排一次
+  - 新增：单屏容量计算、`/plan` 版面预览
+  - 新增：超出容量时用 Windows 11 虚拟桌面分流（`Win+Ctrl+D` 新建 → 启动 → 排版 → 切回）
+  - 新增参数：`/launcher` `/keep` `/capacity` `/forcevd`
+  - 管理员实例自动跳过并写日志
+- **v1.0.0** 首个版本
+
+## 10. License
 
 [MIT](LICENSE)
