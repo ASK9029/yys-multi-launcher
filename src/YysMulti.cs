@@ -460,21 +460,39 @@ static class Program
     // 先尽量把窗口调成目标格子，再按每行最大高度打包，保证不重叠
     static void Arrange(List<IntPtr> handles)
     {
-        int n = handles.Count;
-        if (n == 0) return;
+        if (handles.Count == 0) return;
 
         int cols, rows, cw, ch;
-        if (!TryPlan(n, out cols, out rows, out cw, out ch))
+        if (!TryPlan(handles.Count, out cols, out rows, out cw, out ch))
         {
             cw = MinCellW;
             ch = MinCellH;
-            Log("警告: " + n + " 个超出容量，按最小格 " + cw + "x" + ch + " 处理");
+            Log("警告: " + handles.Count + " 个超出容量，按最小格 " + cw + "x" + ch + " 处理");
         }
 
+        for (int pass = 0; pass < 2; pass++)
+        {
+            int bottom = ArrangePass(handles, cw, ch);
+            Rectangle wa = WorkArea();
+            if (bottom <= wa.Bottom) return;
+
+            double f = (double)(wa.Height - Gap * 2) / (bottom - wa.Top);
+            if (f >= 0.98 || pass == 1) return;
+
+            cw = Math.Max(720, (int)(cw * f));
+            ch = Math.Max(405, (int)(ch * f));
+            Log("排版超出屏幕，缩小目标到 " + cw + "x" + ch + " 重排");
+        }
+    }
+
+    // 返回本次排版的底边，用于判断是否超出屏幕
+    static int ArrangePass(List<IntPtr> handles, int cw, int ch)
+    {
+        int n = handles.Count;
         Rectangle wa = WorkArea();
         int left = wa.Left + Gap, top = wa.Top + Gap;
 
-        // 1) 先把能动的窗口挪到左上并尝试设成格子大小；动不了的（管理员进程）后面直接跳过
+        // 1) 先把能动的窗口挪到左上并尝试设成目标格子
         var movable = new List<IntPtr>();
         for (int i = 0; i < n; i++)
         {
@@ -526,9 +544,8 @@ static class Program
             if (h > rowH) rowH = h;
         }
 
-        if (y + rowH > wa.Bottom)
-            Log("警告: 窗口总高度超出一屏，最后一行可能被截断，建议减少实例或用虚拟桌面");
         Log("排版完成: " + placed + "/" + n + " 个窗口落位（" + (n - movable.Count) + " 个管理员实例未处理）");
+        return y + rowH;
     }
 
     static List<IntPtr> CurrentDesktopWindows()
