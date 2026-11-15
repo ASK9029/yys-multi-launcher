@@ -16,3 +16,7 @@ bin/
 *.tmp
 Thumbs.db
 desktop.ini
+
+# 本地截图（可能包含桌面/账号信息）
+*.png
+*.jpg
